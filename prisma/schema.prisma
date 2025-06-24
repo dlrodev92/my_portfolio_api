@@ -1,0 +1,396 @@
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+enum ProjectStatus {
+  LIVE
+  IN_PROGRESS
+  ARCHIVED
+}
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  title       String
+  subtitle    String
+  slug        String        @unique
+  status      ProjectStatus
+  heroImage   String
+  liveDemo    String?
+  github      String?
+  caseStudy   String?
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relationships
+  overview            ProjectOverview?
+  metrics             ProjectMetrics?
+  technicalDetails    TechnicalDetails?
+  screenshots         Screenshot[]
+  technologies        Technology[]
+  projectTags         ProjectTag[]
+  lessons             Lesson[]
+  businessOutcomes    BusinessOutcome[]
+  improvements        Improvement[]
+  nextSteps           NextStep[]
+  futureTools         FutureTool[]
+  performanceMetrics  PerformanceMetric[]
+
+  @@map("projects")
+}
+
+model ProjectOverview {
+  id        Int      @id @default(autoincrement())
+  problem   String   @db.Text
+  solution  String   @db.Text
+  role      String   @db.Text
+  impact    String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int     @unique
+
+  @@map("project_overviews")
+}
+
+model ProjectMetrics {
+  id         Int      @id @default(autoincrement())
+  launchDate String
+  duration   String
+  teamSize   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int     @unique
+
+  @@map("project_metrics")
+}
+
+model TechnicalDetails {
+  id           Int      @id @default(autoincrement())
+  database     String   @db.Text
+  api          String   @db.Text
+  components   String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int     @unique
+
+  @@map("technical_details")
+}
+
+model Screenshot {
+  id          Int      @id @default(autoincrement())
+  url         String
+  description String   @db.Text
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("screenshots")
+}
+
+model Technology {
+  id        Int      @id @default(autoincrement())
+  name      String
+  reason    String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("technologies")
+}
+
+model Tag {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  projectTags ProjectTag[]
+
+  @@map("tags")
+}
+
+model ProjectTag {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId     Int
+
+  @@unique([projectId, tagId])
+  @@map("project_tags")
+}
+
+model Lesson {
+  id          Int      @id @default(autoincrement())
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("lessons")
+}
+
+model BusinessOutcome {
+  id          Int      @id @default(autoincrement())
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("business_outcomes")
+}
+
+model Improvement {
+  id          Int      @id @default(autoincrement())
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("improvements")
+}
+
+model NextStep {
+  id          Int      @id @default(autoincrement())
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("next_steps")
+}
+
+model FutureTool {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("future_tools")
+}
+
+model PerformanceMetric {
+  id          Int      @id @default(autoincrement())
+  description String   @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId Int
+
+  @@map("performance_metrics")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum ContentBlockType {
+  PARAGRAPH
+  HEADING
+  CODE
+  IMAGE
+  CALLOUT
+  QUOTE
+  LIST
+  VIDEO
+}
+
+enum CalloutVariant {
+  INFO
+  WARNING
+  TIP
+  ERROR
+}
+
+enum ListStyle {
+  BULLET
+  NUMBERED
+}
+
+enum VideoType {
+  YOUTUBE
+  VIMEO
+}
+
+model BlogPost {
+  id              Int      @id @default(autoincrement())
+  slug            String   @unique
+  title           String
+  subtitle        String?
+  excerpt         String   @db.Text
+  metaDescription String   @db.Text
+  socialImage     String?
+  readTime        Int
+  wordCount       Int      @default(0)
+  views           Int      @default(0)
+  heroImage       String?
+  heroImageAlt    String?
+  heroImageCaption String?
+  publishedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // JSON fields for simple data
+  author          Json     // Author info since it's just you
+  
+  // Relationships
+  category        Category?     @relation(fields: [categoryId], references: [id])
+  categoryId      Int?
+  series          Series?       @relation(fields: [seriesId], references: [id])
+  seriesId        Int?
+  seriesPart      Int?
+  contentBlocks   ContentBlock[]
+  blogPostTags    BlogPostTag[]
+
+  @@map("blog_posts")
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  blogPosts BlogPost[]
+
+  @@map("categories")
+}
+
+model Series {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?  @db.Text
+  totalParts  Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  blogPosts BlogPost[]
+
+  @@map("series")
+}
+
+model ContentBlock {
+  id        Int              @id @default(autoincrement())
+  type      ContentBlockType
+  order     Float            // Using Float for easy reordering
+  content   String           @db.Text
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Optional fields based on block type
+  // For headings
+  level     Int?             // h1, h2, h3, etc.
+  
+  // For code blocks
+  language  String?
+  codeTitle String?
+  
+  // For images
+  imageUrl  String?
+  imageAlt  String?
+  imageCaption String?
+  imageAlignment String?      // center, left, right, full
+  
+  // For callouts
+  calloutVariant CalloutVariant?
+  calloutTitle   String?
+  
+  // For quotes
+  quoteAuthor String?
+  
+  // For lists
+  listStyle ListStyle?
+  listItems Json?            // Array of list items
+  
+  // For videos
+  videoType  VideoType?
+  videoId    String?
+  videoTitle String?
+  
+  // For paragraphs
+  paragraphStyle String?     // lead, normal, etc.
+
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPostId Int
+
+  @@map("content_blocks")
+}
+
+model BlogTag {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  slug        String        @unique
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  blogPostTags BlogPostTag[]
+
+  @@map("blog_tags")
+}
+
+model BlogPostTag {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  blogPost   BlogPost @relation(fields: [blogPostId], references: [id], onDelete: Cascade)
+  blogPostId Int
+  blogTag    BlogTag  @relation(fields: [blogTagId], references: [id], onDelete: Cascade)
+  blogTagId  Int
+
+  @@unique([blogPostId, blogTagId])
+  @@map("blog_post_tags")
+}
+
+model ContactSubmission {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@map("contact_submissions")
+}
